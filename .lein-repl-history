@@ -1,0 +1,76 @@
+(io/reader "/dev/null")
+(type (io/reader "/dev/null"))
+(type (io/reader "/Users/l1x/Music/iTunes/iTunes Music Library.xml"))
+(doseq [lofasz (io/reader "/Users/l1x/Music/iTunes/iTunes Music Library.xml")] (print lofasz))
+(let [rdr (io/reader "/Users/l1x/Music/iTunes/iTunes Music Library.xml")]  (doseq [line (line-seq rdr)] (println line)))
+(type (let [rdr (io/reader "/Users/l1x/Music/iTunes/iTunes Music Library.xml")]  (line-seq rdr)))
+(def xml-content (let [rdr (io/reader "/Users/l1x/Music/iTunes/iTunes Music Library.xml")]  (line-seq rdr)))
+(map :content ({:content 1} {:content 2} {:content 3}))
+(:content {:content 1})
+(map #(:content %) ({:content 1} {:content 2} {:content 3}))
+(map #(:content %) '({:content 1} {:content 2} {:content 3}))
+(map :content '({:content 1} {:content 2} {:content 3}))
+(map :content '(({:content 1} {:content 2} {:content 3})))
+(apply map :content '(({:content 1} {:content 2} {:content 3})))
+xml-content   (let [rdr (io/reader "/Users/l1x/Music/iTunes/iTunes Music Library.xml")]  (line-seq rdr))
+(def file-content (let [rdr (io/reader "/Users/l1x/Music/iTunes/iTunes Music Library.xml")]  (line-seq rdr)))
+(first file-content)
+(def input-xml (io/reader "/Users/l1x/Music/iTunes/iTunes Music Library.xml"))
+(first input-xml)
+(def xml-elements  (xml/parse input-xml))
+(first xml-elements)
+(type xml-elements)
+(second xml-elements)
+(def filtered      (->> xml-elements
+                          :content
+                          first
+                          :content
+                          (filter #(= (:tag %) :dict))
+                          first
+                          :content
+                          (filter #(= (:tag %) :dict))
+                          (map :content)))
+filtered
+(type filtered)
+(first filtered)
+(map #(map :content %) filtered)
+(first (map #(map :content %) filtered))
+(first (map first (map #(map :content %) filtered)))
+(map first (map #(map :content %) filtered)))
+(first (map first (map #(map :content %) filtered)))
+(first (map #(map :content %) filtered))
+(map #(map first %) (first (map #(map :content %) filtered)))
+(map first (first (map #(map :content %) filtered)))
+(map first (map #(map :content %) filtered))
+(map first (first (map #(map :content %) filtered)))
+(map first (map #(map :content %) filtered))
+(map #(map first %) (map #(map :content %) filtered))
+(clojure.walk/keywordize-keys {"a" 1 "b" 2})
+(clojure.walk/keywordize "szop")
+(clojure.walk/keyword "szop")
+(keyword "szop")
+(keyword "Name")
+(keyword (.toLowerCase "Name"))
+(clojure.string/replace "The color is red" #"red" "blue")
+(clojure.string/replace "The color is red" #" " "blue")
+(clojure.string/replace "The color is red" #" " _)
+(clojure.string/replace "The color is red" #" " "_")
+(def           process-first (->> xml-elements
+                          :content
+                          first
+                          :content
+                          (filter #(= (:tag %) :dict))
+                          first
+                          :content
+                          (filter #(= (:tag %) :dict))
+                          (map :content)
+                          ))
+(first process-first)
+process-second  (map #(map first %) (map #(map :content %) process-first))
+(def process-second  (map #(map first %) (map #(map :content %) process-first)))
+(first process-second)
+process-second
+(for [record process-second] record)
+(first (for [record process-second] record))
+(for [x (range 1 4), y (range 6 9)] (* x y))
+(for [x (range 1 4) y (range 6 9)] (* x y))
