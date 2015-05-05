@@ -164,12 +164,25 @@
 
         process-fourth  (for [record process-third]
                           (into {} (for [element record] {(first element) (second element)})))
+
+
+        make-records (for [record process-fourth] (into [] [
+                                                            (:artist        record "Unknown")
+                                                            (:album_artist  record (:artist record))
+                                                            (:album         record "Unknown")
+                                                            (:name          record "Unknown")
+                                                            (:track_number  record 0) 
+                                                            ]))
         ;; OPTIMIZE END
                              
           ]
 
-      (doseq [x process-fourth] (spit (str (uuid) ".json") (json/write-str x)))
-
+      ;(doseq [y (for [x process-fourth] {(str (uuid) ".json") x})] (clojure.pprint/pp y))
+;     (doseq [json-doc (for [x process-fourth] 
+;                        {(str (uuid) ".json") x})] 
+;       ;printing each json doc
+;       (clojure.pprint/pprint json-doc))
+        (clojure.pprint/pprint make-records)
     ;; end main
-)))
+    )))
 ;;END
