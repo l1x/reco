@@ -20,6 +20,7 @@
     [clojure.data.xml       :as xml ]
     [clojure.java.io        :as io  ]
     [clojure.data.json      :as json]
+    [org.httpkit.client     :as http]
     )
   (:import 
     [java.io File]
@@ -28,6 +29,21 @@
   (:gen-class))
 
 ;; HELPERS
+;; CLI
+
+(def cli-options
+  ;; An option with a required argument
+  [["-p" "--port PORT" "Port number"
+    :default 80
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+   ;; A non-idempotent option
+   ["-v" nil "Verbosity level"
+    :id :verbosity
+    :default 0
+    :assoc-fn (fn [m k _] (update-in m [k] inc))]
+   ;; A boolean option defaulting to nil
+   ["-h" "--help"]])
 
 ;; Read config
 
@@ -78,30 +94,28 @@
   []
   (str (UUID/randomUUID)))
 
-;; CLI
-
-(def cli-options
-  ;; An option with a required argument
-  [["-p" "--port PORT" "Port number"
-    :default 80
-    :parse-fn #(Integer/parseInt %)
-    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
-   ;; A non-idempotent option
-   ["-v" nil "Verbosity level"
-    :id :verbosity
-    :default 0
-    :assoc-fn (fn [m k _] (update-in m [k] inc))]
-   ;; A boolean option defaulting to nil
-   ["-h" "--help"]])
+;; DEV
 
 
-(defn exit [n] 
-  (log/info "init :: stop")
-  (System/exit n))
+(def to-be-replaced 
+  [[#"\ " "_"] [#"\?" "_"] [#"\%" "_"]])
+
+(defn safe-name
+  ""
+  [name to-be-replaced] 
+  (reduce (fn [acc [a b]] (clojure.string/replace acc a b)) (.toLowerCase name) to-be-replaced))
+
+
+
+;https://api.discogs.com/database/search?release_title=nevermind&artist=nirvana&per_page=1&page=1&token=SgpxjKTqGpjWEVyjQQuQUKSoRucECiyKxjjgYzIc
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; OPS 
+
+(defn exit [n] 
+  (log/info "init :: stop")
+  (System/exit n))
 
 (defn config-ok [config]
   (log/info "config [ok]") 
@@ -132,14 +146,10 @@
         (config-err config))
 
     (let [  
-          
-          
           file-path     (get-in config [:ok :reco :file-path]) 
           input-xml     (io/reader file-path)
-          xml-elements  (xml/parse input-xml)
-
+          xml-elements  (xml/parse input-xml)                     
           ;; OPTIMIZE THIS
-      
           process-first (->> xml-elements 
                           :content 
                           first 
@@ -149,11 +159,9 @@
                           :content
                           (filter #(= (:tag %) :dict))
                           (map :content))
-
           process-second  (map 
                             #(map first %) 
                             (for [record process-first] (map :content record)))
-
           process-third   (for [record process-second]
                             (map (fn [l]
                                      ;return []
@@ -161,28 +169,34 @@
                                        (second l)  ])
                                  ;partition each list element to pairs
                                  (partition 2 record)))
-
-        process-fourth  (for [record process-third]
+          process-fourth  (for [record process-third]
                           (into {} (for [element record] {(first element) (second element)})))
+          make-records (for [record process-fourth] 
+                         (into [] [
+                          (:artist        record "Unknown")
+                          (:album_artist  record (:artist record))
+                          (:album         record "Unknown")
+                          (:name          record "Unknown")
+                          (:track_number  record 0) ] ))
 
+        albums (into #{} (for [record process-fourth] 
+                           [  (:album_artist  record (:artist record))
+                              (:album         record "Unknown")         ])) ]
+        
+      
+      ;; OPTIMIZE END
 
-        make-records (for [record process-fourth] (into [] [
-                                                            (:artist        record "Unknown")
-                                                            (:album_artist  record (:artist record))
-                                                            (:album         record "Unknown")
-                                                            (:name          record "Unknown")
-                                                            (:track_number  record 0) 
-                                                            ]))
-        ;; OPTIMIZE END
-                             
-          ]
+        (doseq [album albums] 
+                           (let [ url (str "https://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=" 
+                                           "%22Michal+Menert%22+%22Dreaming+Of+A+Bigger+Life%22"
+                                            "+site:bandcamp.com") ]
+                                     (clojure.pprint/pprint url))))))
 
       ;(doseq [y (for [x process-fourth] {(str (uuid) ".json") x})] (clojure.pprint/pp y))
 ;     (doseq [json-doc (for [x process-fourth] 
 ;                        {(str (uuid) ".json") x})] 
 ;       ;printing each json doc
 ;       (clojure.pprint/pprint json-doc))
-        (clojure.pprint/pprint make-records)
+;        (clojure.pprint/pprint make-records)
     ;; end main
-    )))
 ;;END

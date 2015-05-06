@@ -12,6 +12,7 @@
     [org.clojure/data.json        "0.2.6"  ]
     [org.clojure/tools.logging    "0.3.1"  ]
     [org.clojure/data.xml         "0.0.8"  ]
+    [http-kit                     "2.1.16"]
     [org.slf4j/slf4j-log4j12      "1.7.10" ]
     [log4j/log4j                  "1.2.17"
      :exclusions [
