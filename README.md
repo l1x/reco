@@ -1,3 +1,6 @@
+This project is not actively developed. I was curious about using this XML for building a recommendation engine but run out of time
+
+
 ```
  ["Daft Punk" "Daft Punk" "Homework" "Daftendirekt" "1"]
  ["Daft Punk" "Daft Punk" "Homework" "WDPK 83.7 FM" "2"]
